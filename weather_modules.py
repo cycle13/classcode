@@ -25,7 +25,7 @@ eo = 6.11;
 missval = -9999;
 eps = 2.2204e-16
 
-def theta_to_temp(temp, pres):
+def temp_to_theta(temp, pres):
     ''' Compute potential temperature '''
     ''' '''
     ''' theta: Input potential temperature (K) '''
@@ -33,7 +33,7 @@ def theta_to_temp(temp, pres):
     ''' temp:  Output temperature (K)'''
     return temp * (100000. / pres) ** 0.286
 
-def temp_to_theta(theta, pres):
+def theta_to_temp(theta, pres):
     ''' Compute temperature '''
     ''' '''
     ''' temp:  Input temperature (K)''' 
