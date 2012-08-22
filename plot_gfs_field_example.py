@@ -21,7 +21,7 @@ from mpl_toolkits.basemap import Basemap
 # <codecell>
 
 # Set user options
-fpath = '/home/scavallo/data/gfs_4_20120822_0000_000.nc'
+fpath = '/home/xxxx/data/gfs_4_20120822_0000_000.nc'
 level_option = 50000 # Pascals; set to -1 for sea level pressure
 date_string = '2012082200' # yyyymmddhh
 
