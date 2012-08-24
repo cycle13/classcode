@@ -29,7 +29,7 @@ level_option = 50000 # Pascals; set to -1 for sea level pressure
 
 # Now provide the path to the directory containing the .nc file. Please note,
 # do NOT include the .nc file in the path.
-data_path = '/home/xxxx/'
+fpath = '/home/pmarsh/metr4424/lab01/data'
 
 
 
@@ -38,7 +38,7 @@ data_path = '/home/xxxx/'
 
 # Open the netcdf file and read select variables
 dt = datetime.datetime.strptime(date_string, '%Y%m%d%H')
-fpath = os.path.join(data_path, 'gfs_4_%s_%s00_000.nc' % (
+fpath = os.path.join(fpath, 'gfs_4_%s_%s00_000.nc' % (
                      dt.strftime('%Y%m%d'), dt.strftime('%H')))
 print fpath
 f = netCDF4.Dataset(fpath,'r')
