@@ -29,7 +29,7 @@ level_option = 50000 # Pascals; set to -1 for sea level pressure
 
 # Now provide the path to the directory containing the .nc file. Please note,
 # do NOT include the .nc file in the path.
-data_path = '/home/pmarsh/metr4424/lab01/data'
+data_path = '/home/xxxx/'
 
 
 
@@ -40,6 +40,7 @@ data_path = '/home/pmarsh/metr4424/lab01/data'
 dt = datetime.datetime.strptime(date_string, '%Y%m%d%H')
 fpath = os.path.join(data_path, 'gfs_4_%s_%s00_000.nc' % (
                      dt.strftime('%Y%m%d'), dt.strftime('%H')))
+print fpath
 f = netCDF4.Dataset(fpath,'r')
 lons = f.variables['lon_0'][:]
 lats = f.variables['lat_0'][::-1] # Read in reverse direction
@@ -89,8 +90,7 @@ else:
 
 cflevs = np.arange(cbar_min, cbar_max+1, cint)
 
-# fig = plt.figure(figsize=(8., 16./golden), dpi=128)   # New figure
-fig = plt.figure()
+fig = plt.figure(figsize=(8., 16./golden), dpi=128)   # New figure
 ax1 = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
 m = Basemap(projection='ortho', lat_0 = 50, lon_0 = 260,
