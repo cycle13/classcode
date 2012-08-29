@@ -82,14 +82,6 @@ X, Y = np.meshgrid(lons, lats)
 
 levelh = level_option / 100 # Convert level to hPa for title
 
-if (level_option == -1 ):
-   titletext = 'Sea level pressure valid %s at %s UTC' % (
-                dt.strftime('%d %b %Y'), dt.strftime('%H00'))
-else:
-   titletext = '%s hPa geopotential heights valid %s at %s UTC' % (
-                levelh, dt.strftime('%d %b %Y'), dt.strftime('%H00'))
-print titletext
-
 # <codecell>
 
 # Set global figure properties
