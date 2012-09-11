@@ -62,6 +62,19 @@ def mixrat_to_td(qvap, pres):
     tdew = 1/((1/Tfrez) - (Rv/L)*np.log(evap/eo))
     return tdew
 
+def spechum_to_td(spechum, pres):
+    ''' Convert from water vapor mixing ratio to dewpoint temperature '''
+    ''' '''
+    ''' spechum: Input specific humidity in (kg/kg)'''
+    ''' pres: Input pressure (Pa)'''
+    ''' tdew: Output dewpoint temperature (K)'''
+    qvap = (spechum/(1-spechum))
+    
+    pres = pres/100
+    evap = qvap * pres * RvRd;
+    tdew = 1/((1/Tfrez) - (Rv/L)*np.log(evap/eo))
+    return tdew
+    
 def claus_clap(temp):
     ''' Compute saturation vapor pressure '''
     ''' '''
