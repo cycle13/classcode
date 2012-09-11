@@ -20,7 +20,7 @@ from mpl_toolkits.basemap import Basemap, shiftgrid
 import weather_modules as wm
 import utilities_modules as um
 
-from mstats import *
+# from mstats import *
 # <codecell>
 
 ###################################
@@ -63,7 +63,7 @@ print fpath
 if (lat_range[0] == lat_range[1]):
    cross_orient = 'east-west'
 else:
-   cross_orient = 'north-south'   
+   cross_orient = 'north-south'
 
 # If plotting geopotential height, automatically plot anomaly instead since the full field varies strongly with height
 if varname2fill == 'HGT_P0_L100_GLL0':
@@ -76,7 +76,7 @@ levs = f.variables['lv_ISBL0'][:]
 var2fill = f.variables[varname2fill][:,::-1,:]
 var2cntr = f.variables[varname2cntr][:,::-1,:]
 u_plot =  f.variables['UGRD_P0_L100_GLL0'][:,::-1,:]
-v_plot =  f.variables['VGRD_P0_L100_GLL0'][:,::-1,:] 
+v_plot =  f.variables['VGRD_P0_L100_GLL0'][:,::-1,:]
 if ( plot_theta == 'true' or plot_temperature == 'true' ):
    temperature = f.variables['TMP_P0_L100_GLL0'][:,::-1,:]
 
@@ -92,10 +92,10 @@ uv_plot = np.sqrt(u_plot**2 + v_plot**2)
 
 # Convert temperature to potential temperature
 if plot_theta == 'true' :
-   pres = np.zeros_like(temperature).astype('f')   
-   for kk in range(0,len(levs)):      
+   pres = np.zeros_like(temperature).astype('f')
+   for kk in range(0,len(levs)):
       pres[kk,:,:] = levs[kk]
-   
+
    theta = wm.temp_to_theta(temperature, pres)
 
 
@@ -115,17 +115,17 @@ if cross_orient == 'east-west':
    if plot_theta == 'true':
       theta_cross = theta[:,latind,loninds].squeeze()
    if plot_temperature == 'true':
-      temperature_cross = temperature[:,latind,loninds].squeeze()      
-   
+      temperature_cross = temperature[:,latind,loninds].squeeze()
+
    if plot_anomaly == 'true':
       varcross_mean = np.average(var_cross,1)
-      tmp = np.zeros_like(var_cross).astype('f')   
-      for kk in range(0,len(levs)):      
+      tmp = np.zeros_like(var_cross).astype('f')
+      for kk in range(0,len(levs)):
          tmp[kk,:] = var_cross[kk,:] - varcross_mean[kk]
       del var_cross
       var_cross = tmp
-      del tmp	 
-      
+      del tmp
+
 else:
    lonind =  np.ravel(lons==lon_range[0])
    latinds = np.ravel((lats<=lat_range[1])&(lats>=lat_range[0]))
@@ -138,15 +138,15 @@ else:
    if plot_theta == 'true':
       theta_cross = theta[:,latinds,lonind].squeeze()
    if plot_temperature == 'true':
-      temperature_cross = temperature[:,latinds,lonind].squeeze()   
+      temperature_cross = temperature[:,latinds,lonind].squeeze()
    if plot_anomaly == 'true':
       varcross_mean = np.average(var_cross,1)
-      tmp = np.zeros_like(var_cross).astype('f')   
-      for kk in range(0,len(levs)):      
+      tmp = np.zeros_like(var_cross).astype('f')
+      for kk in range(0,len(levs)):
          tmp[kk,:] = var_cross[kk,:] - varcross_mean[kk]
       del var_cross
       var_cross = tmp
-      del tmp	 
+      del tmp
 
 
 
@@ -155,11 +155,11 @@ golden = (np.sqrt(5)+1.)/2.
 figprops = dict(figsize=(8., 16./golden), dpi=128)
 
 if varname2fill == 'TMP_P0_L100_GLL0':
-   base_cntr = 275 # Base contour    
-   cint = 5 # Contour interval 
+   base_cntr = 275 # Base contour
+   cint = 5 # Contour interval
    nconts = 15 # number of contours
-if varname2fill == 'HGT_P0_L100_GLL0':   
-   cint = 10 # Contour interval 
+if varname2fill == 'HGT_P0_L100_GLL0':
+   cint = 10 # Contour interval
 if plot_anomaly == 'true':
    if cross_orient == 'east-west':
       cint = 5
@@ -168,14 +168,14 @@ if plot_anomaly == 'true':
    else:
       cint = 10
       base_cntr = 0
-      nconts = 10   
- 
+      nconts = 10
+
 cbar_min = base_cntr-nconts*cint
 cbar_max = base_cntr+nconts*cint
 cflevs = np.arange(cbar_min, cbar_max+1, cint)
 cnlevs = np.arange(cbar_min,cbar_max,4*cint)
 
-# If the color interval is outside the range of data, limit the data displayed.  
+# If the color interval is outside the range of data, limit the data displayed.
 #   Otherwise, it will shade white which is confusing because it also means zero.
 ncy,ncx = np.shape(var_cross)
 for jj in range(0,ncy):
@@ -183,7 +183,7 @@ for jj in range(0,ncy):
       if var_cross[jj,ii]>cbar_max:
          var_cross[jj,ii] = cbar_max
       if var_cross[jj,ii]<cbar_min:
-         var_cross[jj,ii] = cbar_min	 
+         var_cross[jj,ii] = cbar_min
 
 
 
@@ -214,11 +214,11 @@ if plot_winds == 'true':
    cf3 = plt.contour(x_cross,levs_hPa,uv_cross,levels=cflevs_winds,colors='k', linestyles='dashed',linewidths=1.0)
    plt.clabel(cf3, inline=1, fontsize=10, fmt='%i')
 if plot_theta == 'true':
-   cf4 = plt.contour(x_cross,levs_hPa,theta_cross,levels=cflevs_theta,colors='k', linestyles='solid',linewidths=1.5)  
-   plt.clabel(cf4, inline=1, fontsize=10, fmt='%i')   
+   cf4 = plt.contour(x_cross,levs_hPa,theta_cross,levels=cflevs_theta,colors='k', linestyles='solid',linewidths=1.5)
+   plt.clabel(cf4, inline=1, fontsize=10, fmt='%i')
 if plot_temperature == 'true':
    cf5 = plt.contour(x_cross,levs_hPa,temperature_cross,levels=cflevs_temp,colors='r', linestyles='dashed',linewidths=1.5)
-   plt.clabel(cf5, inline=1, fontsize=10, fmt='%i')   
+   plt.clabel(cf5, inline=1, fontsize=10, fmt='%i')
 
 plt.ylim((pres_range[0],pres_range[1]))
 ax1.set_ylim(ax1.get_ylim()[::-1])
