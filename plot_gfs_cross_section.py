@@ -36,16 +36,14 @@ plot_temperature = 'true'
 plot_anomaly = 'true'
 plot_winds = 'false' # 'true' to plot windbarbs, 'false' otherwise
 plot_contours = 'true' # True to plot contours, false otherwise
-#lat_range = [37,37]
-#lon_range = [260,280]
-lat_range = [25,50]
-lon_range = [268,268]
+lat_range = [37,37]
+lon_range = [260,280]
 pres_range = [200,1000]
 figname = "gfs_cross_section_analysis_ew" # will save an image named this with a .png extension
 
 # Now provide the path to the directory containing the .nc file. Please note,
 # do NOT include the .nc file in the path.
-fpath = '/home/scavallo/data'
+fpath = '/home/xxxx/data'
 
 ###################################
 # END user options
