@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import numpy as np
-# from mstats import *
+from scipy import ndimage
+
 Cp = 1004.5;
 Cv = 717.5;
 Rd = 287.04;
@@ -351,7 +352,7 @@ def gradient_sphere(f, *varargs):
     based on gradient function from /usr/lib64/python2.6/site-packages/numpy/lib/function_base.py
     """
 
-    R_earth = 6371200;
+    R_earth = 6371200.
     N = len(f.shape)  # number of dimensions
     n = len(varargs)
     argsin = list(varargs)
@@ -426,7 +427,7 @@ def gradient_sphere(f, *varargs):
     dlons[-1] = (dlons[-2] - dlons[-1])
 
     # Since we differenced in the reverse direction, change the sign
-    dlats = -1*dlats
+    #dlats = -1*dlats
 
     dlatarr = np.tile(dlats,[nlon,1])
     dlatarr = np.reshape(dlatarr,[nlat,nlon])
@@ -467,7 +468,6 @@ def gradient_sphere(f, *varargs):
        dfdx = dfdx/dx2
 
        nzz = np.shape(levs)
-       print nzz
        if not nzz:
           nzz=0
 
@@ -550,3 +550,112 @@ The horizontal convergence
 '''
     dudx, dudy, dvdx, dvdy = _get_gradients(u, v, dx, dy)
     return dudx + dvdy
+
+def geostrophic_latlon(u, v, ghgt, lats, lons):
+    '''
+Calculate horizontal advection on a latitude/longitude grid
+
+Input:
+   
+   u(lats,lons), v(lats,lons) : 2 dimensional u and v wind arrays 
+                             dimensioned by (lats,lons).
+                             Arrays correspond to the x and y 
+			     components of the wind, respectively.
+			     
+   ghgt(lats,lons): 2 dimensional array of geopotential height
+   
+   lats(lats) : latitude vector
+   lons(lons) : longitude array
+
+Output:
+
+   ug(lats,lons), vg(lats,lons): 2 dimensional geostrophic u and v 
+                             wind arrays dimensioned by (lats,lons).
+                             Arrays correspond to the x and y 
+			     components of the geostrophic wind, 
+			     respectively.
+'''
+    # 2D latitude array
+    glats = np.zeros_like(u).astype('f')      
+    for jj in range(0,len(lats)):
+	for ii in range(0,len(lons)):    
+	   glats[jj,ii] = lats[jj]
+
+    # Coriolis parameter
+    f = 2*(7.292e-05)*np.sin(np.deg2rad(glats))    
+
+    ghgt = ndimage.gaussian_filter(ghgt,0.75)
+    
+    geop = ghgt * 9.81
+    dphidy,dphidx = gradient_sphere(geop, lats, lons)
+    
+    ug = -dphidy/f
+    vg = dphidx/f
+    
+    return ug, vg
+
+def hadvection_latlon(u, v, datain, lats, lons):
+    '''
+Calculate horizontal advection on a latitude/longitude grid
+
+Input:
+
+   datain(lats,lons): 2 dimensional array to compute advection of
+
+   u(lats,lons), v(lats,lons) : 2 dimensional u and v wind arrays 
+                             dimensioned by (lats,lons).
+                             Arrays correspond to the x and y 
+			     components of the wind, respectively.
+
+   lats(lats) : latitude vector
+   lons(lons) : longitude array
+
+Output:
+
+   dataout(lats,lons): Two dimensional array with the
+                        horizontal advection of data
+'''
+    datady,datadx = gradient_sphere(datain, lats, lons)
+    dataout = -u*datadx -v*datady
+    
+    return dataout
+def vertical_vorticity_latlon(u, v, lats, lons, abs_opt):
+    '''
+Calculate the vertical vorticity on a latitude/longitude grid
+
+Input:
+   u(lats,lons), v(lats,lons) : 2 dimensional u and v wind arrays 
+                                dimensioned by (lats,lons).
+                                Arrays correspond to the x and y 
+		   	        components of the wind, respectively.
+
+   lats(lats) : latitude vector
+   lons(lons) : longitude array
+
+   abs_opt: 1 to compute absolute vorticity
+            0 for relative vorticity only
+
+Output: 
+
+   vert_vort(lats,lons): Two dimensional array of vertical voriticity
+'''
+    dudy,dudx = gradient_sphere(u, lats, lons)
+    dvdy,dvdx = gradient_sphere(v, lats, lons)
+    
+    if abs_opt == 1 :
+       # 2D latitude array
+       glats = np.zeros_like(u).astype('f')      
+       for jj in range(0,len(lats)):
+	   for ii in range(0,len(lons)):    
+	      glats[jj,ii] = lats[jj]
+
+       # Coriolis parameter
+       f = 2*(7.292e-05)*np.sin(np.deg2rad(glats))    
+       
+    else:   
+       f = 0.
+    
+    zeta = dvdx - dudy
+    vert_vort = zeta + f  
+
+    return vert_vort

@@ -58,10 +58,24 @@ def filter_numeric_nans(data,thresh,repl_val,high_or_low) :
     temp = np.reshape(data,np.prod(np.size(data)), 1)
     if high_or_low=='high':        	
 	inds = np.argwhere(temp>thresh) 	
-    elif high_or_low=='low':
-        inds = np.argwhere(temp<thresh) 	
+	temp[inds] = repl_val	  
+    elif high_or_low=='low':    
+        inds = np.argwhere(temp<thresh) 
+	temp[inds] = repl_val	  
+    elif high_or_low =='both':
+       	inds = np.argwhere(temp>thresh) 	
+	temp[inds] = repl_val
+	del inds
+       	inds = np.argwhere(temp<-thresh) 	
+	temp[inds] = -repl_val	                 
     else:
         inds = np.argwhere(temp>thresh) 
+	temp[inds] = repl_val	  
+
+    # Turn vector back into array
+    data = np.reshape(temp,dimens,order='F').copy()
+ 
+    return data    
     
 def bold_labels(ax,fontsize=None):
     if fontsize is None:
