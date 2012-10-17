@@ -477,7 +477,8 @@ def gradient_sphere(f, *varargs):
             dz[1:-1] = (zin[2:] - zin[:-2])/2
             dz[0] = (zin[1] - zin[0])
             dz[-1] = (zin[-1] - zin[-2])
-	    dz = dz*-1 # assume the model top is the first index and the lowest model is the last index
+	    if zin[0,1,1] > zin[1,1,1]:
+	       dz = dz*-1 # assume the model top is the first index and the lowest model is the last index
 
 	    dx3 = np.ones_like(f).astype(otype)
 	    for kk in range(0,nz):
@@ -659,3 +660,127 @@ Output:
     vert_vort = zeta + f  
 
     return vert_vort
+
+def thermal_wind_sphere(thickness_in, lats, lons):
+    '''
+Calculate the thermal wind on a latitude/longitude grid
+
+Input:
+   thickness_in(lats,lons) : 2 dimensional geopotential height thickness array 
+                             dimensioned by (lats,lons).
+
+
+   lats(lats) : latitude vector
+   lons(lons) : longitude array
+
+
+Output: 
+
+   thermal_wind_u(lats,lons), thermal_wind_v(lats,lons): Two dimensional arrays of 
+                                                         u- and v- components of 
+							 thermal wind vector
+'''
+    
+    # Smooth the thicknesses
+    thickness_in = ndimage.gaussian_filter(thickness_in,0.75)
+    
+    dthickdy,dthickdx = gradient_sphere(thickness_in, lats, lons)
+
+       
+    # 2D latitude array
+    glats = np.zeros_like(thickness_in).astype('f')      
+    for jj in range(0,len(lats)):
+	for ii in range(0,len(lons)):    
+	   glats[jj,ii] = lats[jj]
+
+    # Coriolis parameter
+    f = 2*(7.292e-05)*np.sin(np.deg2rad(glats))    
+    
+           
+    thermal_wind_u = -1*(9.81/f)*dthickdy
+    thermal_wind_v = (9.81/f)*dthickdx
+
+    return thermal_wind_u, thermal_wind_v
+
+def epv_sphere(theta,pres,u,v,lats,lons):
+    """
+
+   Computes the Ertel Potential Vorticity (PV) on a latitude/longitude grid
+
+   Input:    
+
+       theta:       3D potential temperature array on isobaric levels
+       pres:        3D pressure array
+       u,v:         3D u and v components of the horizontal wind on isobaric levels
+       lats,lons:   1D latitude and longitude vectors
+
+   Output:
+      
+      epv: Ertel PV in potential vorticity units (PVU)
+   
+
+   Steven Cavallo
+   October 2012
+   University of Oklahoma
+    
+    """
+    iz, iy, ix = theta.shape
+    
+    dthdp, dthdy, dthdx = gradient_sphere(theta, pres, lats, lons)
+    dudp, dudy, dudx = gradient_sphere(u, pres, lats, lons)
+    dvdp, dvdy, dvdx = gradient_sphere(v, pres, lats, lons)
+
+    avort = np.zeros_like(theta).astype('f')   
+    for kk in range(0,iz):       
+       avort[kk,:,:] = vertical_vorticity_latlon(u[kk,:,:].squeeze(), v[kk,:,:].squeeze(), lats, lons, 1)
+
+    epv = (-9.81*(-dvdp*dthdx - dudp*dthdy + avort*dthdp))*10**6
+
+
+    return epv
+    
+def interp2pv(pv, fval, pv_surf):
+    """
+
+   Linearly interpolates a field to a PV surface
+
+   Input:    
+
+       pv - 3D array that contains the PV at common levels (P or theta)
+       fval - 3D field to interpolate
+       pv_surf - potential vorticity surface to interpolate onto
+
+    Steven Cavallo
+    October 2012
+    University of Oklahoma
+    
+    """
+    iz, iy, ix = pv.shape
+    
+    # Scan  from the top of the model downward.
+    # The zeroth index is assumed to correspond to the top of the model.
+    trop = fval[0,:,:].squeeze() 
+
+    for jj in range(iy):
+       for ii in range(ix):  
+
+           aa = np.ravel(pv[:,jj,ii]>pv_surf)
+	   pvcol = pv[:,jj,ii].squeeze()
+	   minpv = np.min(pvcol)
+
+           if ( minpv >= pv_surf ):
+	      # If there are no PV values in the column less than what is desired to interpolate onto, then use value closest to the surface
+              trop[jj,ii] = fval[-1,jj,ii]
+           elif ( pv[0,jj,ii] <= pv_surf ):
+	      # If PV at the model top is less than what is desired to interpolate onto, then use the value at the top of the model
+              trop[jj,ii] = fval[0,jj,ii]
+           else:               
+	       for kk in range(1,iz+1):      
+	          # linearly interpolate between the closest levels
+	          if pv[kk,jj,ii] < pv_surf:
+                      m = (fval[kk-1,jj,ii] - fval[kk,jj,ii]) / (pv[kk-1,jj,ii] - pv[kk,jj,ii])
+                      trop[jj,ii] = m * (pv_surf - pv[kk,jj,ii]) + fval[kk,jj,ii]
+                      break
+
+
+    return trop
