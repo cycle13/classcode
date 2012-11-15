@@ -216,7 +216,7 @@ def gradient_cartesian(f, *varargs):
     argsin = list(varargs)
 
     if N != n:
-       raise SyntaxError("dimensions of input array must match the number of remaining argumens")
+       raise SyntaxError("dimensions of input array must match the number of remaining arguments")
 
     df = np.gradient(f)
 
@@ -296,7 +296,7 @@ def gradient_cartesian(f, *varargs):
        dfdx = dfdx/dx
 
        nzz = np.shape(levs)
-       print nzz
+       
        if not nzz:
           nzz=0
 
@@ -305,9 +305,10 @@ def gradient_cartesian(f, *varargs):
 	    dz = np.zeros_like(zin).astype(otype)
             dz[1:-1] = (zin[2:] - zin[:-2])/2
             dz[0] = (zin[1] - zin[0])
-            dz[-1] = (zin[-1] - zin[-2])
-	    dz = dz*-1 # assume the model top is the first index and the lowest model is the last index
-
+            dz[-1] = (zin[-1] - zin[-2])	    	    	    
+	    if zin[1] < zin[0]:
+	       dz = dz*-1 # assume the model top is the first index and the lowest model is the last index
+	    
 	    dx3 = np.ones_like(f).astype(otype)
 	    for kk in range(0,nz):
 	       dx3[kk,:,:] = dz[kk]
@@ -661,6 +662,43 @@ Output:
 
     return vert_vort
 
+def vertical_vorticity_cartesian(u, v, lats, deltax, deltay, abs_opt):
+    '''
+Calculate the vertical vorticity on a Cartesian grid
+
+Input:
+   u(y,x), v(y,x) : 2 dimensional u and v wind arrays                                 
+                    Arrays correspond to the x and y 
+		    components of the wind, respectively.
+
+   lats(lats) : 2D latitude array
+   deltax     : horizontal x grid spacing in meters
+   deltay     : horiztional y grid spacing in meters
+
+   abs_opt: 1 to compute absolute vorticity
+            0 for relative vorticity only
+
+Output: 
+
+   vert_vort(y,x): Two dimensional array of vertical voriticity
+'''
+    dudy,dudx = gradient_cartesian(u, deltax, deltay)
+    dvdy,dvdx = gradient_cartesian(v, deltax, deltay)
+        
+    iy, ix = u.shape
+    
+    if abs_opt == 1 :
+       # Coriolis parameter
+       f = 2*(7.292e-05)*np.sin(np.deg2rad(lats))    
+       
+    else:   
+       f = 0.
+    
+    zeta = dvdx - dudy
+    vert_vort = zeta + f  
+
+    return vert_vort
+
 def thermal_wind_sphere(thickness_in, lats, lons):
     '''
 Calculate the thermal wind on a latitude/longitude grid
@@ -726,9 +764,10 @@ def epv_sphere(theta,pres,u,v,lats,lons):
     """
     iz, iy, ix = theta.shape
     
+
     dthdp, dthdy, dthdx = gradient_sphere(theta, pres, lats, lons)
     dudp, dudy, dudx = gradient_sphere(u, pres, lats, lons)
-    dvdp, dvdy, dvdx = gradient_sphere(v, pres, lats, lons)
+    dvdp, dvdy, dvdx = gradient_sphere(v, pres, lats, lons)    
 
     avort = np.zeros_like(theta).astype('f')   
     for kk in range(0,iz):       
@@ -738,6 +777,46 @@ def epv_sphere(theta,pres,u,v,lats,lons):
 
 
     return epv
+    
+def epv_cartesian(theta,pres,u,v,lats,deltax,deltay):
+    """
+
+   Computes the Ertel Potential Vorticity (PV) on a Cartesian grid
+
+   Input:    
+
+       theta:       3D potential temperature array on isobaric levels
+       pres:        1D pressure vector
+       u,v:         3D u and v components of the horizontal wind on isobaric levels
+       lats:        2D latitude array
+       deltax, deltay: x and y horizontal grid spacing in meters
+
+   Output:
+      
+      epv: Ertel PV in potential vorticity units (PVU)
+   
+
+   Steven Cavallo
+   October 2012
+   University of Oklahoma
+    
+    """
+    iz, iy, ix = theta.shape
+    
+    dthdp, dthdy, dthdx = gradient_cartesian(theta, pres, deltax, deltay)
+    dudp, dudy, dudx = gradient_cartesian(u, pres, deltax, deltay)
+    dvdp, dvdy, dvdx = gradient_cartesian(v, pres, deltax, deltay)
+
+    avort = np.zeros_like(theta).astype('f')   
+    for kk in range(0,iz):       
+       avort[kk,:,:] = vertical_vorticity_cartesian(u[kk,:,:].squeeze(), v[kk,:,:].squeeze(), lats, deltax, deltay, 1)
+
+    epv = (-9.81*(-dvdp*dthdx - dudp*dthdy + avort*dthdp))*10**6
+
+
+    return epv
+
+
     
 def interp2pv(pv, fval, pv_surf):
     """
